@@ -160,14 +160,12 @@ fi
 
 # config.yaml にプロバイダー設定を書く
 mkdir -p "$HERMES_DIR"
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    cat > "$CONFIG_FILE" << YAML
+cat > "$CONFIG_FILE" << YAML
 model:
   default: ${DEFAULT_MODEL}
   provider: ${PROVIDER}
 YAML
-    ok "設定ファイル作成"
-fi
+ok "設定ファイル作成"
 
 echo ""
 echo "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

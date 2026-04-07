@@ -65,8 +65,10 @@ else
     xcode-select --install 2>/dev/null || true
     # Wait for installation
     echo -e "${DIM}  インストールのダイアログが出たら「インストール」を押してください${NC}"
-    echo -e "${DIM}  完了したら Enter を押してください${NC}"
-    read -r
+    echo -e "${DIM}  自動で完了を検知します。お待ちください...${NC}"
+    while ! xcode-select -p &>/dev/null; do
+        sleep 5
+    done
     if ! xcode-select -p &>/dev/null; then
         fail "開発ツールのインストールに失敗しました。もう一度試してください。"
     fi
@@ -83,7 +85,7 @@ if command -v brew &>/dev/null; then
     ok "Homebrew 見つかりました"
 else
     info "Homebrew をインストールします..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
     # Apple Silicon の PATH 設定
     if [[ -f /opt/homebrew/bin/brew ]]; then
@@ -126,11 +128,11 @@ fi
 
 # Python 3.11
 UV_CMD="$(command -v uv)"
-if $UV_CMD python find 3.11 &>/dev/null; then
+if "$UV_CMD" python find 3.11 &>/dev/null; then
     ok "Python 3.11 OK"
 else
     info "Python 3.11 をインストール中..."
-    $UV_CMD python install 3.11
+    "$UV_CMD" python install 3.11
     ok "Python 3.11 インストール完了"
 fi
 
@@ -186,23 +188,33 @@ export VIRTUAL_ENV="$HERMES_DIR/venv"
 if [[ -d "venv" ]]; then
     info "既存の venv を使用"
 else
-    $UV_CMD venv venv --python 3.11
+    "$UV_CMD" venv venv --python 3.11
 fi
 
 # 依存パッケージ
+INSTALL_OK=false
 if [[ -f "uv.lock" ]]; then
-    UV_PROJECT_ENVIRONMENT="$HERMES_DIR/venv" $UV_CMD sync --all-extras --locked 2>/dev/null || \
-        $UV_CMD pip install -e ".[all]" 2>/dev/null || \
-        $UV_CMD pip install -e "." 2>/dev/null
-else
-    $UV_CMD pip install -e ".[all]" 2>/dev/null || \
-        $UV_CMD pip install -e "." 2>/dev/null
+    UV_PROJECT_ENVIRONMENT="$HERMES_DIR/venv" "$UV_CMD" sync --all-extras --locked 2>/dev/null && INSTALL_OK=true
 fi
-ok "依存パッケージ インストール完了"
+if [[ "$INSTALL_OK" != "true" ]]; then
+    "$UV_CMD" pip install -e ".[all]" 2>/dev/null && INSTALL_OK=true
+fi
+if [[ "$INSTALL_OK" != "true" ]]; then
+    "$UV_CMD" pip install -e "." 2>/dev/null && INSTALL_OK=true
+fi
+if [[ "$INSTALL_OK" == "true" ]]; then
+    ok "依存パッケージ インストール完了"
+else
+    fail "依存パッケージのインストールに失敗しました"
+fi
 
 # CLI コマンド設置
 mkdir -p "$HOME/.local/bin"
 ln -sf "$HERMES_DIR/venv/bin/hermes" "$HOME/.local/bin/hermes"
+
+if [[ ! -x "$HERMES_DIR/venv/bin/hermes" ]]; then
+    warn "hermes コマンドが見つかりません。手動で 'hermes setup' を実行してください。"
+fi
 
 # PATH 設定
 SHELL_RC="$HOME/.zshrc"
@@ -234,7 +246,7 @@ else
     git clone https://github.com/karinMusaka/hermes-onboarding.git "$ONBOARD_DIR" 2>/dev/null || {
         # フォールバック: スクリプトを直接ダウンロード
         mkdir -p "$ONBOARD_DIR"
-        for f in wizard.sh tutorial.sh; do
+        for f in wizard.sh tutorial.sh missions.sh; do
             curl -sL "https://raw.githubusercontent.com/karinMusaka/hermes-onboarding/main/$f" \
                 -o "$ONBOARD_DIR/$f" 2>/dev/null || true
         done

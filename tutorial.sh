@@ -85,7 +85,7 @@ echo ""
 echo -e "${DIM}  ─── ここから Hermes の回答 ───${NC}"
 echo ""
 
-hermes "こんにちは、簡潔に自己紹介してください。2文以内で。" 2>/dev/null || {
+timeout 30 hermes "こんにちは、簡潔に自己紹介してください。2文以内で。" 2>/dev/null || {
     echo -e "${YELLOW}  (Hermes の起動に少し時間がかかることがあります)${NC}"
 }
 
@@ -123,7 +123,7 @@ echo ""
 echo -e "  Hermes にファイルを作ってもらいます..."
 echo ""
 
-hermes "デスクトップに hermes_test.txt というファイルを作ってください。中身は「Hermes チュートリアル完了！」と書いてください。作成したら完了と教えてください。" 2>/dev/null || true
+timeout 30 hermes "デスクトップに hermes_test.txt というファイルを作ってください。中身は「Hermes チュートリアル完了！」と書いてください。作成したら完了と教えてください。" 2>/dev/null || true
 
 echo ""
 
@@ -167,7 +167,7 @@ echo ""
 echo -e "  今日の日付と曜日を聞いてみましょう..."
 echo ""
 
-hermes "今日は何年何月何日の何曜日ですか？簡潔に答えてください。" 2>/dev/null || true
+timeout 30 hermes "今日は何年何月何日の何曜日ですか？簡潔に答えてください。" 2>/dev/null || true
 
 echo ""
 ok "Hermes は日付や時間も把握しています。"
@@ -201,7 +201,7 @@ echo ""
 echo -e "  メールの下書きを作ってもらいましょう..."
 echo ""
 
-hermes "取引先への打ち合わせ日程調整メールの下書きを作ってください。来週の火曜か水曜の午後を候補にして。短く丁寧に。" 2>/dev/null || true
+timeout 30 hermes "取引先への打ち合わせ日程調整メールの下書きを作ってください。来週の火曜か水曜の午後を候補にして。短く丁寧に。" 2>/dev/null || true
 
 echo ""
 ok "メールの下書きができました！"
@@ -285,7 +285,7 @@ echo ""
 echo "  練習問題が用意されています。"
 echo "  日常業務で使いながらレベルアップしましょう！"
 echo ""
-echo "    hermes mission     ← ミッション一覧を見る"
+echo "    bash ~/.hermes/onboarding/missions.sh     ← ミッション一覧を見る"
 echo ""
 echo "  もう一度チュートリアルをやりたいとき:"
 echo "    bash ~/.hermes/onboarding/tutorial.sh"
