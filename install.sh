@@ -169,7 +169,7 @@ if [[ -d "$HERMES_DIR/.git" ]]; then
 else
     info "Hermes をダウンロード中（30秒くらいかかります）..."
     mkdir -p "$HOME/.hermes"
-    git clone https://github.com/hermes-ai/hermes-agent.git "$HERMES_DIR" 2>/dev/null || \
+    git clone https://github.com/NousResearch/hermes-agent.git "$HERMES_DIR" 2>/dev/null || \
         fail "Hermes のダウンロードに失敗しました。ネットワークを確認してください。"
     ok "ダウンロード完了"
 fi
