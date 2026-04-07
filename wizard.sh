@@ -61,21 +61,23 @@ BANNER
 echo -e "${BOLD}📌 ステップ 1/3: AI プロバイダーの設定${NC}"
 echo ""
 echo "  Hermes は AI を使って動きます。"
-echo "  API キーが必要です（管理者から共有されたもの）。"
+echo "  API キーが必要です（管理者から共有されたものを使います）。"
 echo ""
 echo "  どの AI を使いますか？"
 echo ""
-echo "    [1] Anthropic (Claude) ← おすすめ"
-echo "    [2] OpenAI (ChatGPT)"
+echo "    [1] OpenRouter (Qwen 3) ← おすすめ・低コスト"
+echo "    [2] Anthropic (Claude)"
+echo "    [3] OpenAI (ChatGPT)"
 echo ""
 
 while true; do
     echo -n "  番号を入力 > "
     read -r provider_choice
     case "$provider_choice" in
-        1) PROVIDER="anthropic"; PROVIDER_NAME="Anthropic"; KEY_PREFIX="sk-ant-"; KEY_ENV="ANTHROPIC_API_KEY"; break ;;
-        2) PROVIDER="openai"; PROVIDER_NAME="OpenAI"; KEY_PREFIX="sk-"; KEY_ENV="OPENAI_API_KEY"; break ;;
-        *) echo -e "  ${RED}1 か 2 を入力してください${NC}" ;;
+        1) PROVIDER="openrouter"; PROVIDER_NAME="OpenRouter"; KEY_PREFIX="sk-or-"; KEY_ENV="OPENROUTER_API_KEY"; break ;;
+        2) PROVIDER="anthropic"; PROVIDER_NAME="Anthropic"; KEY_PREFIX="sk-ant-"; KEY_ENV="ANTHROPIC_API_KEY"; break ;;
+        3) PROVIDER="openai"; PROVIDER_NAME="OpenAI"; KEY_PREFIX="sk-"; KEY_ENV="OPENAI_API_KEY"; break ;;
+        *) echo -e "  ${RED}1〜3 の番号を入力してください${NC}" ;;
     esac
 done
 
@@ -119,6 +121,12 @@ if [[ "$goto_step2" != "true" ]]; then
                 -H "content-type: application/json" \
                 -d '{"model":"claude-sonnet-4-20250514","max_tokens":10,"messages":[{"role":"user","content":"hi"}]}' \
                 https://api.anthropic.com/v1/messages 2>/dev/null)
+        elif [[ "$PROVIDER" == "openrouter" ]]; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+                -H "Authorization: Bearer $api_key" \
+                -H "Content-Type: application/json" \
+                -d '{"model":"qwen/qwen3-235b-a22b","max_tokens":10,"messages":[{"role":"user","content":"hi"}]}' \
+                https://openrouter.ai/api/v1/chat/completions 2>/dev/null)
         else
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
                 -H "Authorization: Bearer $api_key" \
@@ -152,7 +160,9 @@ if [[ "$goto_step2" != "true" ]]; then
 fi
 
 # モデル設定
-if [[ "$PROVIDER" == "anthropic" ]]; then
+if [[ "$PROVIDER" == "openrouter" ]]; then
+    DEFAULT_MODEL="qwen/qwen3-235b-a22b"
+elif [[ "$PROVIDER" == "anthropic" ]]; then
     DEFAULT_MODEL="claude-sonnet-4-20250514"
 else
     DEFAULT_MODEL="gpt-4o"
